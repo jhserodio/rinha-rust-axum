@@ -115,15 +115,8 @@ async fn main() {
     axum::serve(listener, app.into_make_service()).await.unwrap();
 }
 
-async fn get_people() -> Json<Value> {
-    Json(json!({
-        "pessoas": [
-            {"name": "carambolas"},
-            {"name": "quadradas"},
-            {"name": "never die"}
-        ],
-        "length": 10
-    }))
+async fn get_people(State(people): State<AppState>) -> Json<Value> {
+    Json(json!(people.read().await.clone()))
 }
 
 async fn get_people_by_id(
