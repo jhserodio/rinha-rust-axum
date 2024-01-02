@@ -13,6 +13,8 @@ use time::{Date, macros::date};
 use tokio::sync::RwLock;
 use uuid::Uuid;    
 
+mod persistence;
+
 time::serde::format_description!(date_format, Date, "[year]-[month]-[day]");
 
 #[derive(Clone, Deserialize)]
@@ -61,7 +63,7 @@ impl From<PersonStackTech> for String {
     }
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, sqlx::FromRow)]
 pub struct Person {
     id: Uuid,
     #[serde(rename="nome")]
@@ -106,12 +108,12 @@ async fn main() {
 
     let app: Router = Router::new()
         .route("/pessoas", get(get_people))
-        .route("/pessoas/:id", get(get_people_by_id))
+        .route("/pessoas/:id", get(find_person))
         .route("/pessoas", post(create_people))
         .route("/contagem-pessoas", get(count_people))
         .with_state(app_state);
 
-    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app.into_make_service()).await.unwrap();
 }
 
@@ -119,7 +121,7 @@ async fn get_people(State(people): State<AppState>) -> Json<Value> {
     Json(json!(people.read().await.clone()))
 }
 
-async fn get_people_by_id(
+async fn find_person(
     State(people): State<AppState>,
     Path(pessoas_id): Path<Uuid>) -> Result<Json<Person>, StatusCode> {
     
