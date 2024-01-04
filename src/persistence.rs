@@ -2,12 +2,23 @@
 use uuid::Uuid;
 use crate::{Person, NewPerson};
 
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Row, postgres::PgPoolOptions};
 pub struct PostgresRepository {
     pool: PgPool,
 }
 
 impl PostgresRepository {
+    pub async fn connect(url: String) -> Self {
+        PostgresRepository {
+            pool: PgPoolOptions::new()
+                .max_connections(5)
+                .connect(&url)
+                .await
+                .unwrap(),
+        }
+    }
+
+
     pub async fn find_person(&self, id: Uuid) -> Result<Option<Person>, sqlx::Error> {
         sqlx::query_as("
                 SELECT id, name, nick, birth_date, stack
@@ -21,7 +32,7 @@ impl PostgresRepository {
     pub async fn create_person(&self, new_person: NewPerson) -> Result<Person, sqlx::Error> {
         sqlx::query_as("
                 INSERT INTO people (id, name, nick, birth_date, stack)
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING id, name, nick, birth_date, stack
             ")
             .bind(Uuid::now_v7())
