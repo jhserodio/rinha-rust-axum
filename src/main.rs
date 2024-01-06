@@ -5,7 +5,8 @@ use axum::{
     routing::{get, post}, 
     Router,
     extract::{Path, State, Query},
-    response::{Json, IntoResponse}};
+    response::{Json, IntoResponse}
+};
 
 use persistence::PostgresRepository;
 use serde::{Serialize, Deserialize};
@@ -89,20 +90,15 @@ type AppState = Arc<PostgresRepository>;
 
 #[tokio::main]
 async fn main() {
-    // let port = env::var("PORT")
-    //     .ok()
-    //     .and_then(|port| port.parse::<u16>().ok())
-    //     .unwrap_or(3000);
+    let port = env::var("PORT")
+        .ok()
+        .and_then(|port| port.parse::<u16>().ok())
+        .unwrap_or(9999);
 
     let database_url = env::var("DATABASE_URL")
         .unwrap_or(
             String::from("postgres://rinha:rinha@localhost:5432/rinha")
         );
-
-    // let databas_pool_size = env::var("DATABASE_POOL")
-    //     .ok()
-    //     .and_then(|port| port.parse::<u32>().ok())
-    //     .unwrap_or(32);
 
     let repo = PostgresRepository::connect(database_url).await;
 
@@ -115,7 +111,7 @@ async fn main() {
         .route("/contagem-pessoas", get(count_people))
         .with_state(app_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}")).await.unwrap();
     axum::serve(listener, app.into_make_service()).await.unwrap();
 }
 

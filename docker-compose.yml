@@ -1,8 +1,11 @@
 version: '3.5'
 services:
   api1: # API - Instância 01
-    image: api
+    build: .
     hostname: api1
+    environment:
+      DATABASE_URL: postgres://rinha:rinha@db/rinha
+      PORT: 80
     depends_on:
       - db
     expose:
@@ -14,8 +17,11 @@ services:
           memory: '0.5GB'
 
   api2: # API - Instância 01
-    image: api
+    build: .
     hostname: api2
+    environment:
+      DATABASE_URL: postgres://rinha:rinha@db/rinha
+      PORT: 80
     depends_on:
       - db
     expose:
@@ -34,7 +40,7 @@ services:
       - api1
       - api2
     ports:
-      - "3000:3000"
+      - "9999:9999"
     deploy:
       resources:
         limits:
@@ -50,7 +56,7 @@ services:
       POSTGRES_USER: rinha
       POSTGRES_PASSWORD: rinha
       POSTGRES_DB: rinha
-   deploy:
+    deploy:
       resources:
         limits:
           cpus: '0.75'
